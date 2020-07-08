@@ -7,4 +7,4 @@ Tested on macOS with MacVim installed via brew.
 
 Add this line to your Packages/manifest.json:
 
-    "com.github.idbrii.unity-vimeditor": "https://github.com/idbrii/unity-vimeditor.git",
+    "com.github.idbrii.unity-vimeditor": "https://github.com/idbrii/unity-vimeditor.git#v0.1",
