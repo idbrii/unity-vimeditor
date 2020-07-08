@@ -117,6 +117,8 @@ namespace Vim.Editor
                     EditorPrefs.SetBool(k_shouldsetpath_key, new_shouldsetpath);
                 }
 
+                // This doesn't work if ShouldSetPath is set. For some reason,
+                // vim will only let me do one extra command.
                 var prev_extracommands = GetExtraCommands();
                 var new_extracommands = EditorGUILayout.TextField(new GUIContent(
                             "Extra commands before filename",
@@ -126,6 +128,12 @@ namespace Vim.Editor
                 {
                     EditorPrefs.SetString(k_extracommands_key, new_extracommands);
                 }
+
+                if (new_shouldsetpath && !string.IsNullOrEmpty(new_extracommands))
+                {
+                    EditorGUILayout.HelpBox("Set 'path' and Extra commands may not play well together. If files aren't opened correclty, try removing exta commands.", MessageType.Warning);
+                }
+
             }
 
         }
