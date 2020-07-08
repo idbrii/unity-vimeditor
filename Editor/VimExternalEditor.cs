@@ -79,6 +79,16 @@ namespace Vim.Editor
             return EditorPrefs.GetString(k_extracommands_key, "");
         }
 
+        const string k_codeassets_key = "vimcode_codeassets";
+        static string GetCodeAssets()
+        {
+            return EditorPrefs.GetString(k_codeassets_key, ".cs,.txt,.md,.json");
+        }
+        static string[] GetCodeAssetsAsList()
+        {
+            return GetCodeAssets().Split(',');
+        }
+
 
         /// Unity calls this method when it populates "Preferences/External Tools" in
         /// order to allow the code editor to generate necessary GUI. For example, when
@@ -96,6 +106,16 @@ namespace Vim.Editor
             {
                 //~ var package = UnityEditor.PackageManager.PackageInfo.FindForAssembly(GetType().Assembly);
                 //~ GUILayout.Label($"<size=10><color=grey>{package.displayName} v{package.version} enabled</color></size>", style);
+
+                var prev_codeassets = GetCodeAssets();
+                var new_codeassets = EditorGUILayout.TextField(new GUIContent(
+                            "File extensions",
+                            "Comma-separated list of file extensions to open in Vim"),
+                        prev_codeassets);
+                if (new_codeassets != prev_codeassets)
+                {
+                    EditorPrefs.SetString(k_codeassets_key, new_codeassets);
+                }
 
                 var prev_servername = GetServerName();
                 var new_servername = EditorGUILayout.TextField(new GUIContent(
@@ -138,9 +158,21 @@ namespace Vim.Editor
 
         }
 
+
+        bool IsCodeAsset(string filePath)
+        {
+            var extensions = GetCodeAssetsAsList();
+            var match = extensions.FirstOrDefault(ext => filePath.EndsWith(ext));
+            return match != null;
+        }
+
         /// The external code editor needs to handle the request to open a file.
         public bool OpenProject(string filePath, int line, int column)
         {
+            if (!IsCodeAsset(filePath))
+            {
+                return false;
+            }
             //~ Debug.Log($"[VimExternalEditor] OpenProject: {filePath}:{line}");
             var p = LaunchProcess(filePath, line, column);
             p.WaitForExit();
