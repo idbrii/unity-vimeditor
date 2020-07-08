@@ -1,0 +1,12 @@
+{
+  "name": "com.github.idbrii.unity-vimeditor",
+  "displayName": "VimExternalEditor",
+  "version": "0.1.0",
+  "unity": "2019.4",
+  "description": "Add vim to the Unity's External Tools section in Preferences so all your files open in gvim.",
+  "keywords": [ "ide", "editor" ],
+  "category": "editor extensions",
+  "dependencies": {},
+  "samples": [
+  ]
+}
