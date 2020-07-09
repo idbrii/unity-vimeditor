@@ -121,7 +121,7 @@ namespace Vim.Editor
                 {
                     EditorGUILayout.HelpBox("All files will be opened in vim.", MessageType.Info);
                 }
-                if (GUILayout.Button("Reset file extensions"))
+                if (GUILayout.Button("Reset file extensions", GUILayout.Width(200)))
                 {
                     EditorPrefs.DeleteKey(k_codeassets_key);
                 }
