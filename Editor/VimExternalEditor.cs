@@ -82,7 +82,7 @@ namespace Vim.Editor
         const string k_codeassets_key = "vimcode_codeassets";
         static string GetCodeAssets()
         {
-            return EditorPrefs.GetString(k_codeassets_key, ".cs,.txt,.md,.json");
+            return EditorPrefs.GetString(k_codeassets_key, ".cs,.shader,.h,.m,.c,.cpp,.txt,.md,.json");
         }
         static string[] GetCodeAssetsAsList()
         {
