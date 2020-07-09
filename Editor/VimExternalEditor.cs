@@ -110,11 +110,20 @@ namespace Vim.Editor
                 var prev_codeassets = GetCodeAssets();
                 var new_codeassets = EditorGUILayout.TextField(new GUIContent(
                             "File extensions",
-                            "Comma-separated list of file extensions to open in Vim"),
+                            "Comma-separated list of file extensions to open in Vim. Clear it to open all files in vim."),
                         prev_codeassets);
+                new_codeassets = new_codeassets.Trim();
                 if (new_codeassets != prev_codeassets)
                 {
                     EditorPrefs.SetString(k_codeassets_key, new_codeassets);
+                }
+                if (string.IsNullOrEmpty(new_codeassets))
+                {
+                    EditorGUILayout.HelpBox("All files will be opened in vim.", MessageType.Info);
+                }
+                if (GUILayout.Button("Reset file extensions"))
+                {
+                    EditorPrefs.DeleteKey(k_codeassets_key);
                 }
 
                 var prev_servername = GetServerName();
