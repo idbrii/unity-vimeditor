@@ -17,7 +17,6 @@ namespace Vim.Editor
     [InitializeOnLoad]
     public class VimExternalEditor : IExternalCodeEditor
     {
-        string m_VimPath = "/usr/local/bin/mvim";
 
         static VimExternalEditor()
         {
@@ -96,7 +95,13 @@ namespace Vim.Editor
         public void Initialize(string editorInstallationPath)
         {
             //~ Debug.Log($"[VimExternalEditor] Initialize: {editorInstallationPath}");
-            m_VimPath = editorInstallationPath;
+            EditorPrefs.SetString(k_editorpath_key, editorInstallationPath);
+        }
+
+        const string k_editorpath_key = "vimcode_editorpath";
+        static string GetVimEditorPath()
+        {
+            return EditorPrefs.GetString(k_editorpath_key, "/usr/local/bin/mvim");
         }
 
         const string k_servername_key = "vimcode_servername";
@@ -263,7 +268,7 @@ namespace Vim.Editor
             ProcessStartInfo start_info = new ProcessStartInfo();
             start_info.CreateNoWindow = false;
             start_info.UseShellExecute = false;
-            start_info.FileName = m_VimPath;
+            start_info.FileName = GetVimEditorPath();
             start_info.WindowStyle = ProcessWindowStyle.Hidden;
 
             // If Unity doesn't have a column, they pass -1. Vim will abort
@@ -283,7 +288,7 @@ namespace Vim.Editor
 
             start_info.Arguments = $"--servername {GetServerName()} --remote-silent +\"call cursor({line},{column})\" {path} {GetExtraCommands()} \"{file}\"";
 
-            //~ Debug.Log($"[VimExternalEditor] Launching {m_VimPath} {start_info.Arguments}");
+            //~ Debug.Log($"[VimExternalEditor] Launching {start_info.FileName} {start_info.Arguments}");
 
             return Process.Start(start_info);
         }
