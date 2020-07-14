@@ -110,12 +110,23 @@ namespace Vim.Editor
             return EditorPrefs.GetString(k_servername_key, "Unity");
         }
 
-        const string k_shouldsetpath_key = "vimcode_setpath";
-        static bool ShouldSetPath()
+        enum SetPathBehaviour
         {
-            return EditorPrefs.GetBool(k_shouldsetpath_key, true);
+            None,
+            ToProjectPath,
+            ToScriptPath,
         }
+        static readonly string[] k_SetPathChoices = {
+            "Don't modify path variable",
+            "Add project path (Assets\\**)",
+            "Add script path (Assets\\Scripts\\**)",
+        };
 
+        const string k_shouldsetpath_key = "vimcode_setpath";
+        static SetPathBehaviour GetSetPathBehaviour()
+        {
+            return (SetPathBehaviour)EditorPrefs.GetInt(k_shouldsetpath_key, (int)SetPathBehaviour.ToProjectPath);
+        }
 
         const string k_extracommands_key = "vimcode_extracommands";
         static string GetExtraCommands()
@@ -180,17 +191,18 @@ namespace Vim.Editor
                     EditorPrefs.SetString(k_servername_key, new_servername);
                 }
 
-                var prev_shouldsetpath = ShouldSetPath();
-                var new_shouldsetpath = EditorGUILayout.Toggle(new GUIContent(
+                var prev_shouldsetpath = GetSetPathBehaviour();
+                var new_shouldsetpath = (SetPathBehaviour)EditorGUILayout.Popup(new GUIContent(
                             "Set 'path' in vim",
-                            "Adds {project}/Assets/** to vim's 'path' variable to improve behaviour of gf and :find."),
-                        prev_shouldsetpath);
+                            "Adds {project}/Assets/** or {project}/Assets/Scripts/** to vim's 'path' variable to improve behaviour of gf and :find."),
+                        (int)prev_shouldsetpath,
+                        k_SetPathChoices);
                 if (new_shouldsetpath != prev_shouldsetpath)
                 {
-                    EditorPrefs.SetBool(k_shouldsetpath_key, new_shouldsetpath);
+                    EditorPrefs.SetInt(k_shouldsetpath_key, (int)new_shouldsetpath);
                 }
 
-                // This doesn't work if ShouldSetPath is set. For some reason,
+                // This doesn't work if GetSetPathBehaviour is set. For some reason,
                 // vim will only let me do one extra command.
                 var prev_extracommands = GetExtraCommands();
                 var new_extracommands = EditorGUILayout.TextField(new GUIContent(
@@ -202,7 +214,7 @@ namespace Vim.Editor
                     EditorPrefs.SetString(k_extracommands_key, new_extracommands);
                 }
 
-                if (new_shouldsetpath && !string.IsNullOrEmpty(new_extracommands))
+                if (new_shouldsetpath != SetPathBehaviour.None && !string.IsNullOrEmpty(new_extracommands))
                 {
                     EditorGUILayout.HelpBox("Set 'path' and Extra commands may not play well together. If files aren't opened correclty, try removing exta commands.", MessageType.Warning);
                 }
@@ -281,9 +293,18 @@ namespace Vim.Editor
             line = Math.Max(line, 0);
 
             var path = "";
-            if (ShouldSetPath())
+            switch (GetSetPathBehaviour())
             {
-                path = $"+\"set path+={Application.dataPath}/**\"";
+                case SetPathBehaviour.None:
+                    break;
+
+                case SetPathBehaviour.ToProjectPath:
+                    path = $"+\"set path+={Application.dataPath}/**\"";
+                    break;
+
+                case SetPathBehaviour.ToScriptPath:
+                    path = $"+\"set path+={Application.dataPath}/Scripts/**\"";
+                    break;
             }
 
             start_info.Arguments = $"--servername {GetServerName()} --remote-silent +\"call cursor({line},{column})\" {GetExtraCommands()} {path} \"{file}\"";
