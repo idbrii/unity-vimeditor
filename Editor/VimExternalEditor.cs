@@ -41,6 +41,10 @@ namespace Vim.Editor
                     Name = "Vim",
                     Path = "C:/Program Files/vim/Vim/vim82/gvim.exe",
                 },
+                new CodeEditor.Installation{
+                    Name = "Vim",
+                    Path = System.Environment.ExpandEnvironmentVariables("%USERPROFILE%/scoop/apps/vim-nightly/current/gvim.exe"),
+                },
             };
         }
 
