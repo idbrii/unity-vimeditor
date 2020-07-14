@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Collections;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System;
 using Unity.CodeEditor;
@@ -26,26 +27,60 @@ namespace Vim.Editor
 
         VimExternalEditor()
         {
-            m_Installations = new CodeEditor.Installation[]{
-                // Unity will automatically filter out paths that don't exist on disk.
-                // TODO: Come up with more possible paths. Try looking in PATH.
+            m_Installations = BuildInstalls();
+        }
+
+        static CodeEditor.Installation[] BuildInstalls()
+        {
+            var installs = new List<CodeEditor.Installation>(){
+                // Unity will automatically filter out paths that don't
+                // exist on disk. Use some standard paths and search in
+                // PATH.
                 new CodeEditor.Installation{
                     Name = "MacVim",
-                         Path = "/usr/local/bin/mvim",
+                    // Installed with brew
+                    Path = "/usr/local/bin/mvim",
                 },
                 new CodeEditor.Installation{
                     Name = "Vim",
+                    // Linux
                     Path = "/usr/share/vim/gvim",
                 },
-                new CodeEditor.Installation{
-                    Name = "Vim",
-                    Path = "C:/Program Files/vim/Vim/vim82/gvim.exe",
-                },
-                new CodeEditor.Installation{
-                    Name = "Vim",
-                    Path = System.Environment.ExpandEnvironmentVariables("%USERPROFILE%/scoop/apps/vim-nightly/current/gvim.exe"),
-                },
             };
+
+            var paths = Environment.GetEnvironmentVariable("PATH")
+                .Split(Path.PathSeparator)
+                // We could limit our search to folders named vim, but that won't
+                // catch scoop-installed vim and maybe others (chocolatey).
+                .Select(p => GetVimExeInFolder(p))
+                .Where(p => !string.IsNullOrEmpty(p.Path));
+
+            return installs
+                .Concat(paths)
+                .ToArray();
+        }
+
+        static CodeEditor.Installation GetVimExeInFolder(string folder)
+        {
+            if (!string.IsNullOrEmpty(folder))
+            {
+                var name = "Vim";
+                var path = Path.Combine(folder, "gvim.exe");
+                if (!File.Exists(path))
+                {
+                    name = "MacVim";
+                    path = Path.Combine(folder, "mvim");
+                }
+
+                if (File.Exists(path))
+                {
+                    return new CodeEditor.Installation{
+                        Name = name,
+                        Path = path,
+                    };
+                }
+            }
+            return default(CodeEditor.Installation);
         }
 
         CodeEditor.Installation[] m_Installations;
