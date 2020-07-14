@@ -286,7 +286,7 @@ namespace Vim.Editor
                 path = $"+\"set path+={Application.dataPath}/**\"";
             }
 
-            start_info.Arguments = $"--servername {GetServerName()} --remote-silent +\"call cursor({line},{column})\" {path} {GetExtraCommands()} \"{file}\"";
+            start_info.Arguments = $"--servername {GetServerName()} --remote-silent +\"call cursor({line},{column})\" {GetExtraCommands()} {path} \"{file}\"";
 
             //~ Debug.Log($"[VimExternalEditor] Launching {start_info.FileName} {start_info.Arguments}");
 
