@@ -1,7 +1,13 @@
 # unity-vimeditor
 Add vim to the Unity's External Tools section in Preferences so all your files open in gvim.
 
-Tested on macOS with MacVim installed via brew.
+## Verified
+
+I've tested it on multiple platforms:
+
+* On macOS with MacVim installed via brew.
+* On Windows with Gvim installed via scoop (vim-nightly).
+
 
 ## Installation
 
