@@ -33,14 +33,14 @@ namespace Vim.Editor
                     Name = "MacVim",
                          Path = "/usr/local/bin/mvim",
                 },
-                    new CodeEditor.Installation{
-                        Name = "Vim",
-                        Path = "/usr/share/vim/gvim",
-                    },
-                    new CodeEditor.Installation{
-                        Name = "Vim",
-                        Path = "C:/Program Files/vim/Vim/vim82/gvim.exe",
-                    },
+                new CodeEditor.Installation{
+                    Name = "Vim",
+                    Path = "/usr/share/vim/gvim",
+                },
+                new CodeEditor.Installation{
+                    Name = "Vim",
+                    Path = "C:/Program Files/vim/Vim/vim82/gvim.exe",
+                },
             };
         }
 
