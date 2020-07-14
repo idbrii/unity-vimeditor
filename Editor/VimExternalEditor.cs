@@ -184,7 +184,8 @@ namespace Vim.Editor
             }
             //~ Debug.Log($"[VimExternalEditor] OpenProject: {filePath}:{line}");
             var p = LaunchProcess(filePath, line, column);
-            p.WaitForExit();
+            // Don't wait for process to exit. It might be the first time we
+            // launched vim and then it will not terminate until vim exits.
             return true;
         }
 
