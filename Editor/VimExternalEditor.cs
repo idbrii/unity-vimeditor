@@ -3,6 +3,7 @@ using System.Collections;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System;
 using Unity.CodeEditor;
 using UnityEditor;
@@ -110,6 +111,12 @@ namespace Vim.Editor
             return EditorPrefs.GetString(k_servername_key, "Unity");
         }
 
+        const string k_gen_vs_sln_key = "vimcode_gen_vs_sln";
+        static bool ShouldGenerateVisualStudioSln()
+        {
+            return EditorPrefs.GetBool(k_gen_vs_sln_key, true);
+        }
+
         enum SetPathBehaviour
         {
             None,
@@ -179,6 +186,16 @@ namespace Vim.Editor
                 if (GUILayout.Button("Reset file extensions", GUILayout.Width(200)))
                 {
                     EditorPrefs.DeleteKey(k_codeassets_key);
+                }
+
+                var prev_should_gen_vs_sln = ShouldGenerateVisualStudioSln();
+                var new_should_gen_vs_sln = EditorGUILayout.Toggle(new GUIContent(
+                            "Generate Visual Studio Solution",
+                            "Generate sln and csproj when user clicks 'Open C# Project'. Useful for debugging with Visual Studio, working with vscode, using OmniSharp, etc."),
+                        prev_should_gen_vs_sln);
+                if (new_should_gen_vs_sln != prev_should_gen_vs_sln)
+                {
+                    EditorPrefs.SetBool(k_gen_vs_sln_key, new_should_gen_vs_sln);
                 }
 
                 var prev_servername = GetServerName();
@@ -251,6 +268,31 @@ namespace Vim.Editor
         public void SyncAll()
         {
             //~ Debug.Log($"[VimExternalEditor] SyncAll ");
+            if (ShouldGenerateVisualStudioSln())
+            {
+                RegenerateVisualStudioSolution();
+            }
+        }
+
+        // Unlike 'Open C# Project', this only generates the sln (does not
+        // update asset database or open any file).
+        //
+        // Reflection to call internal method SyncVS.Synchronizer.Sync()
+        static void RegenerateVisualStudioSolution()
+        {
+            // Unity calls CodeEditor.Sync instead of calling
+            // SyncVS.Synchronizer.Sync to generate Visual Studio solution, so
+            // use reflection to call it.
+            // https://github.com/Unity-Technologies/UnityCsReference/blob/61f92bd79ae862c4465d35270f9d1d57befd1761/Editor/Mono/CodeEditor/CodeEditorProjectSync.cs#L40-L57
+            // See also
+            // https://forum.unity.com/threads/solved-unity-not-generating-sln-file-from-assets-open-c-project.538487/#post-5597260
+			var sync_vs_type = Type.GetType("UnityEditor.SyncVS,UnityEditor");
+			var synchronizer_field = sync_vs_type.GetField("Synchronizer", BindingFlags.NonPublic | BindingFlags.Static);
+			var synchronizer_object = synchronizer_field.GetValue(sync_vs_type);
+			var synchronizer_type = synchronizer_object.GetType();
+			var synchronizer_sync_fn = synchronizer_type.GetMethod("Sync", BindingFlags.Public | BindingFlags.Instance);
+
+			synchronizer_sync_fn.Invoke(synchronizer_object, null);
         }
 
         /// When you change Assets in Unity, this method for the current chosen
