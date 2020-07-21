@@ -111,6 +111,12 @@ namespace Vim.Editor
             return EditorPrefs.GetString(k_servername_key, "Unity");
         }
 
+        const string k_force_foreground_key = "vimcode_force_foreground";
+        static bool ShouldForceToForeground()
+        {
+            return EditorPrefs.GetBool(k_force_foreground_key, false);
+        }
+
         const string k_gen_vs_sln_key = "vimcode_gen_vs_sln";
         static bool ShouldGenerateVisualStudioSln()
         {
@@ -198,6 +204,16 @@ namespace Vim.Editor
                     EditorPrefs.SetBool(k_gen_vs_sln_key, new_should_gen_vs_sln);
                 }
 
+                var prev_should_force_fg = ShouldForceToForeground();
+                var new_should_force_fg = EditorGUILayout.Toggle(new GUIContent(
+                            "Force foreground",
+                            "Tell vim to put itself in the foreground when opening a file. Don't enable unless Vim's failing to foreground itself."),
+                        prev_should_force_fg);
+                if (new_should_force_fg != prev_should_force_fg)
+                {
+                    EditorPrefs.SetBool(k_force_foreground_key, new_should_force_fg);
+                }
+
                 var prev_servername = GetServerName();
                 var new_servername = EditorGUILayout.TextField(new GUIContent(
                             "Vim server name",
@@ -257,6 +273,10 @@ namespace Vim.Editor
             }
             //~ Debug.Log($"[VimExternalEditor] OpenProject: {filePath}:{line}");
             var p = LaunchProcess(filePath, line, column);
+            if (ShouldForceToForeground())
+            {
+                RequestForeground(p);
+            }
             // Don't wait for process to exit. It might be the first time we
             // launched vim and then it will not terminate until vim exits.
             return true;
@@ -317,13 +337,19 @@ namespace Vim.Editor
             return !string.IsNullOrEmpty(installation.Name);
         }
 
-        Process LaunchProcess(string file, int line, int column)
+        ProcessStartInfo BuildVim()
         {
             ProcessStartInfo start_info = new ProcessStartInfo();
             start_info.CreateNoWindow = false;
             start_info.UseShellExecute = false;
             start_info.FileName = GetVimEditorPath();
             start_info.WindowStyle = ProcessWindowStyle.Hidden;
+            return start_info;
+        }
+
+        Process LaunchProcess(string file, int line, int column)
+        {
+            ProcessStartInfo start_info = BuildVim();
 
             // If Unity doesn't have a column, they pass -1. Vim will abort
             // cursor on negative values, but maintains the current column on
@@ -354,6 +380,19 @@ namespace Vim.Editor
             //~ Debug.Log($"[VimExternalEditor] Launching {start_info.FileName} {start_info.Arguments}");
 
             return Process.Start(start_info);
+        }
+
+
+        void RequestForeground(Process p)
+        {
+            // Windows: user32 functions SetForegroundWindow and SetWindowPos
+            // don't seem to work.
+            // https://stackoverflow.com/questions/18071381/how-can-i-bring-a-process-window-to-the-front
+            ProcessStartInfo start_info = BuildVim();
+            // foreground() doesn't seem to work on Windows. :help foreground() recommends remote_foreground.
+            // Use --clean to prevent delay of loading user's vim config.
+            start_info.Arguments = $"--clean +\"call remote_foreground('{GetServerName()}')\" +quit";
+            Process.Start(start_info);
         }
 
     }
