@@ -55,28 +55,54 @@ namespace Vim.Editor
                 .Select(p => GetVimExeInFolder(p))
                 .Where(p => !string.IsNullOrEmpty(p.Path));
 
-            return installs
+            var all_installs = installs
                 .Concat(paths)
                 .ToArray();
+
+            //~ Debug.Log($"[VimExternalEditor] Possible installs:");
+            //~ foreach (var entry in all_installs)
+            //~ {
+            //~     Debug.Log($"[VimExternalEditor] {entry.Path} {File.Exists(entry.Path)}");
+            //~ }
+
+            return all_installs;
         }
+
+
+        static readonly string[] k_executable_names =
+        {
+#if UNITY_EDITOR_WIN
+            // batch file is preferred because if user set it up, they
+            // probably want to use it.
+            "gvim.bat",
+            // note: scoop shim opens a command prompt in background,
+            // install batch file to prevent that.
+            "gvim.exe",
+#elif UNITY_EDITOR_OSX
+            // Are there alternatives?
+            "mvim",
+            // installed with gtk?
+            "gvim",
+#else
+            // Linux
+            "gvim",
+#endif
+        };
 
         static CodeEditor.Installation GetVimExeInFolder(string folder)
         {
             if (!string.IsNullOrEmpty(folder))
             {
-                var name = "Vim";
-                var path = Path.Combine(folder, "gvim.exe");
-                if (!File.Exists(path))
-                {
-                    name = "MacVim";
-                    path = Path.Combine(folder, "mvim");
-                }
+                var vim_path = k_executable_names
+                    .Select(exe => Path.Combine(folder, exe))
+                    .FirstOrDefault(path => File.Exists(path));
 
-                if (File.Exists(path))
+                if (vim_path != null)
                 {
+                    var name = $"Vim ({Path.GetFileNameWithoutExtension(vim_path)})";
                     return new CodeEditor.Installation{
                         Name = name,
-                        Path = path,
+                        Path = vim_path,
                     };
                 }
             }
