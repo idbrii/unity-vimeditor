@@ -48,15 +48,11 @@ namespace Vim.Editor
                 },
             };
 
-            var paths = Environment.GetEnvironmentVariable("PATH")
+            var all_installs = Environment.GetEnvironmentVariable("PATH")
                 .Split(Path.PathSeparator)
                 // We could limit our search to folders named vim, but that won't
                 // catch scoop-installed vim and maybe others (chocolatey).
-                .Select(p => GetVimExeInFolder(p))
-                .Where(p => !string.IsNullOrEmpty(p.Path));
-
-            var all_installs = installs
-                .Concat(paths)
+                .SelectMany(p => GetVimExeInFolder(p))
                 .ToArray();
 
             //~ Debug.Log($"[VimExternalEditor] Possible installs:");
@@ -89,24 +85,19 @@ namespace Vim.Editor
 #endif
         };
 
-        static CodeEditor.Installation GetVimExeInFolder(string folder)
+        static IEnumerable<CodeEditor.Installation> GetVimExeInFolder(string folder)
         {
             if (!string.IsNullOrEmpty(folder))
             {
-                var vim_path = k_executable_names
+                return k_executable_names
                     .Select(exe => Path.Combine(folder, exe))
-                    .FirstOrDefault(path => File.Exists(path));
-
-                if (vim_path != null)
-                {
-                    var name = $"Vim ({Path.GetFileNameWithoutExtension(vim_path)})";
-                    return new CodeEditor.Installation{
-                        Name = name,
-                        Path = vim_path,
-                    };
-                }
+                    .Where(path => File.Exists(path))
+                    .Select(path => new CodeEditor.Installation{
+                        Name = $"Vim ({Path.GetFileName(path)})",
+                        Path = path,
+                    });
             }
-            return default(CodeEditor.Installation);
+            return Enumerable.Empty<CodeEditor.Installation>();
         }
 
         CodeEditor.Installation[] m_Installations;
