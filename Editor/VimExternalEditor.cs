@@ -308,6 +308,7 @@ namespace Vim.Editor
             if (ShouldGenerateVisualStudioSln())
             {
                 RegenerateVisualStudioSolution();
+                Debug.Log($"[VimExternalEditor] Regenerated Visual Studio solution");
             }
         }
 
