@@ -214,7 +214,7 @@ namespace Vim.Editor
                 var prev_should_gen_vs_sln = ShouldGenerateVisualStudioSln();
                 var new_should_gen_vs_sln = EditorGUILayout.Toggle(new GUIContent(
                             "Generate Visual Studio Solution",
-                            "Generate sln and csproj when user clicks 'Open C# Project'. Useful for debugging with Visual Studio, working with vscode, using OmniSharp, etc."),
+                            "Generate sln and csproj when user clicks 'Open C# Project' and when files are added/moved in the project. Useful for debugging with Visual Studio, working with vscode, using OmniSharp, etc."),
                         prev_should_gen_vs_sln);
                 if (new_should_gen_vs_sln != prev_should_gen_vs_sln)
                 {
@@ -337,7 +337,16 @@ namespace Vim.Editor
         /// instance of IExternalCodeEditor parses the new and changed Assets.
         public void SyncIfNeeded(string[] addedFiles, string[] deletedFiles, string[] movedFiles, string[] movedFromFiles, string[] importedFiles)
         {
-            //~ Debug.Log($"[VimExternalEditor] SyncIfNeeded {addedFiles.Length}");
+            //~ Debug.Log($"[VimExternalEditor] SyncIfNeeded added={addedFiles.Length} deleted={deletedFiles.Length} moved={movedFiles.Length} movedFrom={movedFromFiles.Length} imported={importedFiles.Length}");
+            // Imported occurs super frequently -- often many times after a
+            // compile. Visual Studio solutions don't care about file contents
+            // -- just structure. Don't really care about deleted files since
+            // they won't break visual studio so ignore them too.
+            if ((addedFiles.Length + movedFiles.Length) > 0 && ShouldGenerateVisualStudioSln())
+            {
+                RegenerateVisualStudioSolution();
+                Debug.Log($"[VimExternalEditor] Regenerated Visual Studio solution for {addedFiles.Length} new files, {movedFiles.Length} moved files.");
+            }
         }
 
         /// Unity stores the path of the chosen editor. An instance of
