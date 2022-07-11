@@ -125,7 +125,7 @@ namespace Vim.Editor
         const string k_servername_key = "vimcode_servername";
         static string GetServerName()
         {
-            return EditorPrefs.GetString(k_servername_key, "Unity");
+            return EditorPrefs.GetString(k_servername_key, $"Unity ({PlayerSettings.productGUID})");
         }
 
         const string k_force_foreground_key = "vimcode_force_foreground";
@@ -402,7 +402,7 @@ namespace Vim.Editor
                     break;
             }
 
-            start_info.Arguments = $"--servername {GetServerName()} --remote-silent +\"call cursor({line},{column})\" {GetExtraCommands()} {path} \"{file}\"";
+            start_info.Arguments = $"--servername \"{GetServerName()}\" --remote-silent +\"call cursor({line},{column})\" {GetExtraCommands()} {path} \"{file}\"";
 
             //~ Debug.Log($"[VimExternalEditor] Launching {start_info.FileName} {start_info.Arguments}");
 
