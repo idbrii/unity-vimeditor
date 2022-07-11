@@ -125,7 +125,7 @@ namespace Vim.Editor
         const string k_servername_key = "vimcode_servername";
         static string GetServerName()
         {
-            return EditorPrefs.GetString(k_servername_key, "Unity");
+            return EditorPrefs.GetString(k_servername_key, $"Unity ({PlayerSettings.productGUID})");
         }
 
         const string k_force_foreground_key = "vimcode_force_foreground";
