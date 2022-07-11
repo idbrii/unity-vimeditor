@@ -394,11 +394,11 @@ namespace Vim.Editor
                     break;
 
                 case SetPathBehaviour.ToProjectPath:
-                    path = $"+\"set path+={Application.dataPath}/**\"";
+                    path = $"+\"set path+=\\\"{Application.dataPath}/**\\\"\"";
                     break;
 
                 case SetPathBehaviour.ToScriptPath:
-                    path = $"+\"set path+={Application.dataPath}/Scripts/**\"";
+                    path = $"+\"set path+=\\\"{Application.dataPath}/Scripts/**\\\"\"";
                     break;
             }
 
